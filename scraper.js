@@ -30,6 +30,7 @@ async function getProducts() {
           item.Model = $(childElem).find("div.sc-11iaj9w-0.fXxQZV.hxnpc3-1.WEqJR > span").text();
           item.Price = Number($(childElem).find("div.panelLayout_priceEnergyWrapper__eX2Hi > span.jpymmj-0.gAPiWy.bn4s2g-0.gZsIHL > strong").text().replace(/[^0-9.-]+/g, ""));
           item.Energy = $(childElem).find("div.panelLayout_priceEnergyWrapper__eX2Hi > span > label").text();
+          item.Link = $(childElem).attr('href')
           item.Image = $(childElem).find("div.panelLayout_leftTopHalf__1bwFV > div > div.t5iqm2-0.bAhlTk.j6e7w3-0.TftNu > picture > img").attr("src")
  
           for (let index in item) {
