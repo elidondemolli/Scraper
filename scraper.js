@@ -42,7 +42,7 @@ async function getProducts() {
         });
       arr.push(prodObj)
       arr.forEach((item, i) => {
-        item.id = i + 1;
+        item.id = item.Link.match(/monitor-(\d+)/)[1];
       });
     });
     return arr
@@ -50,7 +50,49 @@ async function getProducts() {
     console.log(error);
   }
 }
- 
+
+async function getProduct(product) {
+  try {
+    const url = `https://www.digitec.ch/${product}`
+
+    const { data } = await axios({
+      method: "GET",
+      url: url,
+    })
+    const $ = cheerio.load(data);
+    const elemSelector = "#pageContent"
+    let arr = []
+
+    $(elemSelector).each((parentIdx, parentElem) => {
+      const title = $(parentElem).find("div > div.header_container__1ob07.helpers_fixGridLayout__iRmw0 > div > div.header_data__k39sv > div > h1").text();
+      const brand = $(parentElem).find("div > div.header_container__1ob07.helpers_fixGridLayout__iRmw0 > div > div.header_data__k39sv > div > h1 > strong").text();
+      const reaction = $(parentElem).find("div.sc-1dj0gc8-2.ezYZiH.sc-1wsbwny-0.pvTwK > div > div > div > table > tbody > tr:nth-child(3) > td:nth-child(2) > div").text()
+      const image = $(parentElem).find("div > div > picture > img").attr("src");
+      const price = Number($(parentElem).find("div > div.header_container__1ob07.helpers_fixGridLayout__iRmw0 > div > div.header_data__k39sv > div > div.sc-1nkkyhu-3.isGLtI > span.sc-1nkkyhu-8.yGeXx > strong").text().replace(/[^0-9.-]+/g, ""))
+      const desc = $(parentElem).find("div > div > div.sc-1dj0gc8-2.ezYZiH.sc-1wsbwny-0.pvTwK > div").text();
+      const frequency = $(parentElem).find("div > div> div.sc-1dj0gc8-2.ezYZiH.sc-1wsbwny-0.pvTwK > div > div > div > table > tbody > tr:nth-child(4) > td:nth-child(2) > div").text();
+      const resolution = $(parentElem).find('div > div.header_container__1ob07.helpers_fixGridLayout__iRmw0 > div > div.header_data__k39sv > div > span').text();
+      const brightness = $(parentElem).find('div > div > div.sc-1dj0gc8-2.ezYZiH.sc-1wsbwny-0.pvTwK > div > div > div > table > tbody > tr:nth-child(2) > td:nth-child(2) > div').text();
+      const prod = {
+        title: title,
+        brand: brand,
+        reaction: reaction,
+        image: image,
+        price: price,
+        desc: desc,
+        frequency: frequency,
+        resolution: resolution,
+        brightness: brightness
+      }
+      arr.push(prod);
+    })
+    console.log(arr)
+    return arr
+  } catch (error) {
+    console.log(error);
+  }
+}
+
 app.get('/', async (req, res) => {
   try {
     const printRes = await getProducts()
@@ -61,14 +103,15 @@ app.get('/', async (req, res) => {
   }
 })
 
-app.get('/:id', async (req, res) => {
+app.get('/product/:id', async (req, res) => {
   try {
-    const byId = req.params.id
-    const result = await getProducts()
+    const id = req.params.id;
+    const product = await getProducts()
+    const filt = product.filter(product => product.id == id);
+    console.log(filt)
+    const result = await getProduct(filt[0].Link);
 
-    const fin = result.filter(result => result.id == byId)
-
-    res.render('show', {articles: fin});
+    res.render('show', {articles: result});
   } catch (error) {
     console.log(error)
   }
